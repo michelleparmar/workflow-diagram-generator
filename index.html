@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflow Diagram Generator</title>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://unpkg.com/react-flow-renderer@9.7.4/dist/ReactFlow.min.js"></script>
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        #root { height: 100vh; }
+        .app { height: 100%; display: flex; flex-direction: column; padding: 20px; }
+        .input-area { margin-bottom: 20px; }
+        textarea { width: 100%; padding: 10px; margin-bottom: 10px; }
+        button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        .diagram-area { flex: 1; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState } = React;
+        const { Background, Controls, MiniMap } = ReactFlow;
+
+        function App() {
+            const [input, setInput] = useState('');
+            const [elements, setElements] = useState([]);
+
+            const parseInput = (text) => {
+                const lines = text.split('\n').filter(line => line.trim() !== '');
+                const nodes = lines.map((line, index) => ({
+                    id: `${index}`,
+                    data: { label: line.trim() },
+                    position: { x: 250, y: 25 + index * 100 },
+                    style: {
+                        background: '#f5f5f5',
+                        border: '1px solid #222',
+                        borderRadius: '5px',
+                        padding: '10px',
+                        width: 180,
+                    },
+                }));
+
+                const edges = nodes.slice(0, -1).map((node, index) => ({
+                    id: `e${index}-${index + 1}`,
+                    source: `${index}`,
+                    target: `${index + 1}`,
+                    type: 'smoothstep',
+                    animated: true,
+                }));
+
+                return [...nodes, ...edges];
+            };
+
+            const handleGenerate = () => {
+                const newElements = parseInput(input);
+                setElements(newElements);
+            };
+
+            return (
+                <div className="app">
+                    <h1>Workflow Diagram Generator</h1>
+                    <div className="input-area">
+                        <textarea
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Enter your workflow description here... (One step per line)"
+                            rows={5}
+                        />
+                        <button onClick={handleGenerate}>Generate Diagram</button>
+                    </div>
+                    <div className="diagram-area">
+                        <ReactFlow 
+                            elements={elements}
+                            snapToGrid={true}
+                            snapGrid={[15, 15]}
+                        >
+                            <Background color="#aaa" gap={16} />
+                            <Controls />
+                            <MiniMap />
+                        </ReactFlow>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
